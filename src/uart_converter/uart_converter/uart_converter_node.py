@@ -8,7 +8,7 @@ from omniwheg_interfaces.msg import IMU, Wheel
 
 
 
-serial_port = '/dev/ttyUSB0'
+serial_port = '/dev/ttyUSB2'
 baud_rate = 9600
 robot_data = '000'
 
@@ -78,22 +78,19 @@ class UartConverter(Node):
             self.get_logger().info('raw message: "%s" ' % robot_data)
             if self.verifyCheckLength(robot_data):
                 robot_data = robot_data[:-len(robot_data.split(" ")[-1])]
+                if robot_data[0] == 'i':
+                    imuMsg = self.imuInfoSeprate(robot_data)
+                    self.imuPublisher.publish(imuMsg)
+                elif robot_data[0] == 'w':
+                    wheelMsg = self.wheelInfoSeprate(robot_data)
+                    self.wheelStatusPublisher.publish(wheelMsg)
+                else:
+                    self.get_logger().info("useless message: %s, throw away" % robot_data)
             else:
                 self.get_logger().info("message length error")
-            if robot_data[0] == 'i':
-                imuMsg = self.imuInfoSeprate(robot_data)
-                self.imuPublisher.publish(imuMsg)
-            elif robot_data[0] == 'w':
-                wheelMsg = self.wheelInfoSeprate(robot_data)
-                self.wheelStatusPublisher.publish(wheelMsg)
-            else:
-                self.get_logger().info("useless message: %s, throw away" % robot_data)
         else:
             self.get_logger().info("No data")
 
-
-
-    
 
 def main(args=None):
     print('Hi from uart_converter_node.')
